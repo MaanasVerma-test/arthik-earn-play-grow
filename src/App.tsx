@@ -16,6 +16,7 @@ import LeaderboardPage from "./pages/LeaderboardPage";
 import ProfilePage from "./pages/ProfilePage";
 import CompetePage from "./pages/CompetePage";
 import BidBonanzaPage from "./pages/BidBonanzaPage";
+import BudgetChallengePage from "./pages/BudgetChallengePage";
 
 const queryClient = new QueryClient();
 
@@ -37,6 +38,7 @@ const App = () => (
           <Route path="/leaderboard" element={<LeaderboardPage />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/compete" element={<CompetePage />} />
+          <Route path="/games/budget-challenge" element={<BudgetChallengePage />} />
           <Route path="/games/bid-bonanza" element={<BidBonanzaPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
