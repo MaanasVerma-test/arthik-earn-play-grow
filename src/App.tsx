@@ -15,6 +15,7 @@ import TriviaGamePage from "./pages/TriviaGamePage";
 import LeaderboardPage from "./pages/LeaderboardPage";
 import ProfilePage from "./pages/ProfilePage";
 import CompetePage from "./pages/CompetePage";
+import BidBonanzaPage from "./pages/BidBonanzaPage";
 
 const queryClient = new QueryClient();
 
@@ -36,6 +37,7 @@ const App = () => (
           <Route path="/leaderboard" element={<LeaderboardPage />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/compete" element={<CompetePage />} />
+          <Route path="/games/bid-bonanza" element={<BidBonanzaPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

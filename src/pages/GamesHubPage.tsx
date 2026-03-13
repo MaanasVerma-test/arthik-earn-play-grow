@@ -1,13 +1,14 @@
 import AppLayout from "@/components/layout/AppLayout";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { TrendingUp, Wallet, HelpCircle, PieChart, Users, Clock, Zap } from "lucide-react";
+import { TrendingUp, Wallet, HelpCircle, PieChart, Users, Clock, Zap, Gavel } from "lucide-react";
 
 const games = [
   { icon: TrendingUp, title: "Stock Market Simulator", desc: "Trade with virtual ₹1,00,000 using real historical data. Build your portfolio and maximize returns.", difficulty: "Medium", xp: "100-200", time: "15-20 min", players: 1245, link: "/games/stock-simulator" },
   { icon: Wallet, title: "Budget Challenge", desc: "Given a monthly salary and random life events — make smart decisions to survive and grow savings.", difficulty: "Easy", xp: "80-150", time: "10-15 min", players: 892, link: "/games" },
   { icon: HelpCircle, title: "Financial Trivia", desc: "Test your finance knowledge with timed Q&A. Play solo or challenge friends.", difficulty: "Easy", xp: "50-100", time: "5-8 min", players: 2341, link: "/games/trivia" },
   { icon: PieChart, title: "Portfolio Builder", desc: "Allocate across equity, debt, gold, and real estate. Simulate 10-year returns.", difficulty: "Hard", xp: "150-250", time: "20-25 min", players: 567, link: "/games" },
+  { icon: Gavel, title: "Bid Bonanza", desc: "Analyze startups, evaluate business models, and place your bids in this immersive valuation game.", difficulty: "Medium", xp: "200-300", time: "10-15 min", players: 432, link: "/games/bid-bonanza" },
 ];
 
 const diffColor: Record<string, string> = { Easy: "text-common", Medium: "text-warning", Hard: "text-destructive" };
