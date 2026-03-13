@@ -271,7 +271,60 @@ const BidBonanzaPage = () => {
     setTimeout(() => advanceRound(), 1800);
   };
 
-  // ─── Start Screen ──────────────────────────────────────────────────────────
+  const totalInvested = portfolio.reduce((s, a) => s + a.bidAmount, 0);
+  const portfolioValue = portfolio.reduce((s, a) => s + a.bidAmount * a.startup.actualROI, 0);
+  const xpEarned = Math.max(0, Math.round((portfolioValue / TOTAL_BUDGET) * 150));
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const saveResults = useCallback(async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+    try {
+      const { error: gameError } = await supabase.from('game_results').insert({
+        user_id: user.id,
+        game_name: 'Bid Bonanza',
+        invested_amount: totalInvested,
+        final_value: Math.round(portfolioValue),
+        xp_earned: xpEarned
+      });
+      if (gameError) throw gameError;
+
+      const { data: profile } = await supabase.from('profiles').select('xp').eq('id', user.id).single();
+      const currentXP = profile?.xp || 0;
+      
+      const { error: updateError } = await supabase.from('profiles').upsert({ 
+        id: user.id,
+        xp: currentXP + xpEarned, 
+        updated_at: new Date().toISOString() 
+      });
+      
+      if (updateError) throw updateError;
+      
+      // Also update auth metadata for near-instant sync in some components
+      await supabase.auth.updateUser({
+        data: { xp: currentXP + xpEarned }
+      });
+      
+      console.log("Successfully saved results and updated XP.");
+    } catch (err: any) {
+      console.error("Error saving results:", err);
+      toast.error("Failed to save game results. XP may not be updated.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [totalInvested, portfolioValue, xpEarned]);
+
+  useEffect(() => {
+    if (phase === "result") {
+      saveResults();
+    }
+  }, [phase, saveResults]);
+
+  // ─── Render Logic ─────────────────────────────────────────────────────────
+
   if (phase === "start") {
     return (
       <AppLayout>
@@ -301,66 +354,7 @@ const BidBonanzaPage = () => {
     );
   }
 
-  // ─── Results Screen ────────────────────────────────────────────────────────
   if (phase === "result") {
-    const totalInvested = portfolio.reduce((s, a) => s + a.bidAmount, 0);
-    const portfolioValue = portfolio.reduce((s, a) => s + a.bidAmount * a.startup.actualROI, 0);
-    const xpEarned = Math.max(0, Math.round((portfolioValue / TOTAL_BUDGET) * 150));
-
-    const saveResults = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        console.log("No user logged in, skipping persistence");
-        return;
-      }
-
-      try {
-        // 1. Save game result
-        const { error: gameError } = await supabase.from('game_results').insert({
-          user_id: user.id,
-          game_name: 'Bid Bonanza',
-          invested_amount: totalInvested,
-          final_value: Math.round(portfolioValue),
-          xp_earned: xpEarned
-        });
-
-        if (gameError) throw gameError;
-
-        // 2. Update profile XP (get current XP first)
-        const { data: profile, error: profileFetchError } = await supabase
-          .from('profiles')
-          .select('xp')
-          .eq('id', user.id)
-          .single();
-
-        if (profileFetchError && profileFetchError.code !== 'PGRST116') throw profileFetchError;
-
-        const currentXP = profile?.xp || 0;
-        const newXP = currentXP + xpEarned;
-
-        const { error: profileUpdateError } = await supabase
-          .from('profiles')
-          .upsert({ 
-            id: user.id, 
-            xp: newXP,
-            updated_at: new Date().toISOString() // Force update trigger if needed
-          });
-
-        if (profileUpdateError) throw profileUpdateError;
-
-        console.log("Results saved and XP updated successfully!");
-      } catch (err) {
-        console.error("Error saving results:", err);
-        toast.error("Failed to save progress to cloud.");
-      }
-    };
-
-    useEffect(() => {
-      if (phase === "result") {
-        saveResults();
-      }
-    }, [phase]);
-
     return (
       <AppLayout>
         <div className="mx-auto max-w-2xl pt-8 pb-12">
@@ -420,7 +414,7 @@ const BidBonanzaPage = () => {
     );
   }
 
-  // ─── Bidding Screen ────────────────────────────────────────────────────────
+  // Fallback: Bidding Screen
   return (
     <AppLayout>
       <div className="mx-auto max-w-2xl pt-4 pb-12">
@@ -476,8 +470,8 @@ const BidBonanzaPage = () => {
                 <span className="flex items-center gap-1"><Globe size={11} /> {currentStartup?.hq}</span>
               </div>
 
-              {/* Stats grid */}
-              <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+              {/* Metrics grid */}
+              <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3">
                 {[
                   { label: "Est. Valuation", value: fmt(currentStartup?.baseValue), icon: TrendingUp, color: "text-primary" },
                   { label: "Revenue / ARR", value: currentStartup?.revenue?.split(" ")[0], icon: BarChart2, color: "text-success" },
@@ -531,10 +525,10 @@ const BidBonanzaPage = () => {
                       className="w-full rounded-xl border border-border bg-card py-3 pl-8 pr-4 text-sm focus:border-primary focus:outline-none focus:ring-0"
                     />
                   </div>
-                  <Button onClick={handleBid} size="lg" className="shrink-0 gap-2">
+                  <Button onClick={handleBid} size="lg" className="shrink-0 gap-2" disabled={showRoundResult}>
                     <Gavel size={16} /> Bid
                   </Button>
-                  <Button variant="outline" size="lg" onClick={() => handlePass()} className="shrink-0">Pass</Button>
+                  <Button variant="outline" size="lg" onClick={() => handlePass()} className="shrink-0" disabled={showRoundResult}>Pass</Button>
                 </div>
                 <div className="mt-3 flex flex-wrap gap-2">
                   {[0.25, 0.5, 0.75, 1].map((frac) => {

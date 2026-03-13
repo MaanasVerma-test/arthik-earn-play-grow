@@ -29,6 +29,7 @@ const SignupPage = () => {
         password,
         options: {
           data: {
+            full_name: email.split('@')[0], // Default name
             role,
             interest,
             xp: 0,
@@ -40,12 +41,16 @@ const SignupPage = () => {
 
       if (error) {
         toast.error(error.message);
-      } else if (data.user) {
-        toast.success("Account created! Welcome to Arthik.");
+      } else if (data.session) {
+        toast.success("Welcome to Arthik!");
         navigate("/dashboard");
+      } else if (data.user && !data.session) {
+        // Confirmation email usually
+        toast.success("Signup successful! Please check your email for confirmation.");
+        navigate("/login");
       }
-    } catch (err) {
-      toast.error("An unexpected error occurred during signup.");
+    } catch (err: any) {
+      toast.error(err.message || "An unexpected error occurred during signup.");
       console.error(err);
     } finally {
       setIsLoading(false);

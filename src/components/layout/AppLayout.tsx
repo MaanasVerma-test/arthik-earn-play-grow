@@ -1,9 +1,9 @@
-import { ReactNode } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { NavLink } from "@/components/NavLink";
 import { LayoutDashboard, BookOpen, Gamepad2, Swords, Trophy, User, Flame, Menu, X } from "lucide-react";
 import { currentUser, getUserLevel } from "@/data/mockData";
-import { useState } from "react";
+import { supabase } from "@/lib/supabase";
 
 const navItems = [
   { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
@@ -16,8 +16,63 @@ const navItems = [
 
 const AppLayout = ({ children }: { children: ReactNode }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [user, setUser] = useState(currentUser);
+  const [loading, setLoading] = useState(true);
   const location = useLocation();
-  const level = getUserLevel(currentUser.xp);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const { data: { user: authUser }, error: authError } = await supabase.auth.getUser();
+        if (authError) {
+          console.error("Auth error in AppLayout:", authError);
+          return;
+        }
+
+        if (authUser) {
+          console.log("AppLayout: Found auth user", authUser.id);
+          const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', authUser.id)
+            .single();
+
+          if (profileError) {
+            console.warn("AppLayout: Profile fetch error (may not exist yet):", profileError);
+          }
+
+          if (profile) {
+            console.log("AppLayout: Profile found, updating XP:", profile.xp);
+            setUser({
+              ...currentUser,
+              name: profile.full_name || authUser.user_metadata?.full_name || authUser.email?.split('@')[0] || "Trader",
+              xp: profile.xp || 0,
+              streak: profile.streak_days || 0,
+              avatar: authUser.user_metadata?.avatar || currentUser.avatar,
+            });
+          } else {
+            console.log("AppLayout: No profile row, using metadata fallback");
+            setUser({
+              ...currentUser,
+              name: authUser.user_metadata?.full_name || authUser.email?.split('@')[0] || "Trader",
+              xp: authUser.user_metadata?.xp || 0,
+              streak: authUser.user_metadata?.streak_days || 0,
+            });
+          }
+        } else {
+          console.log("AppLayout: No logged in user");
+        }
+      } catch (err) {
+        console.error("Unexpected error in AppLayout fetchProfile:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProfile();
+  }, [location.pathname]);
+
+  const level = getUserLevel(user.xp);
 
   return (
     <div className="flex min-h-screen bg-background">
@@ -62,13 +117,13 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-1.5 text-sm">
               <Flame size={16} className="text-warning" />
-              <span className="font-mono font-medium">{currentUser.streak}</span>
+              <span className="font-mono font-medium">{user.streak}</span>
             </div>
             <div className="flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-sm">
-              <span className="font-mono font-medium text-primary">{currentUser.xp.toLocaleString()} XP</span>
+              <span className="font-mono font-medium text-primary">{user.xp.toLocaleString()} XP</span>
             </div>
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-xs font-medium text-primary-foreground">
-              {currentUser.avatar}
+              {user.avatar}
             </div>
           </div>
         </header>
