@@ -1,73 +1,93 @@
-# Welcome to your Lovable project
+# 💰 Arthik (अर्थीक)
 
-## Project info
+**Earn, Play, Grow.**
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+Arthik is a comprehensive financial literacy platform designed to gamify the learning experience. By combining interactive lessons, risk-free simulations, and competitive games, Arthik empowers users to build financial confidence and professional skills in an engaging way.
 
-## How can I edit this code?
+---
 
-There are several ways of editing your application.
+## 🚀 Features
 
-**Use Lovable**
+### 🎮 Gamified Learning
+- **Trivia Hub**: Test your financial IQ with curated quizzes and challenges.
+- **Bid Bonanza**: Dive into the world of startups! Evaluate business models, analyze metrics, and place your bids in this immersive valuation game.
+- **Stock Simulator**: Experience the stock market without the risk. Trade real-world assets with virtual currency.
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+### 📚 Interactive Education
+- **Modular Lessons**: Learn personal finance, investing, and economic concepts through bite-sized, interactive modules.
+- **Progress Tracking**: Earn badges and climb the leaderboard as you master new financial concepts.
 
-Changes made via Lovable will be committed automatically to this repo.
+### 🏆 Community & Competition
+- **Global Leaderboards**: Compare your progress with users worldwide.
+- **Compete Mode**: Join special events and competitions to sharpen your financial skills.
 
-**Use your preferred IDE**
+---
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+## 🛠️ Tech Stack
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+- **Frontend**: [React](https://reactjs.org/) with [TypeScript](https://www.typescriptlang.org/)
+- **Build Tool**: [Vite](https://vitejs.dev/)
+- **Styling**: [Tailwind CSS](https://tailwindcss.com/) & [shadcn/ui](https://ui.shadcn.com/)
+- **Animations**: [Framer Motion](https://www.framer.com/motion/)
+- **State Management**: [TanStack Query](https://tanstack.com/query/latest)
+- **Charts**: [Recharts](https://recharts.org/)
+- **Icons**: [Lucide React](https://lucide.dev/)
 
-Follow these steps:
+---
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+## 📦 Project Structure
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+```text
+src/
+├── components/   # Reusable UI and landing page segments
+├── data/         # Mock data and static content
+├── lib/          # Utilities and configurations
+├── pages/        # Main application views (Dashboard, Games, etc.)
+└── hooks/        # Custom React hooks
 ```
 
-**Edit a file directly in GitHub**
+---
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## 🛠️ Getting Started
 
-**Use GitHub Codespaces**
+### Prerequisites
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+- Node.js (v18 or higher)
+- npm or bun
 
-## What technologies are used for this project?
+### Installation
 
-This project is built with:
+1. Clone the repository:
+   ```sh
+   git clone <YOUR_GIT_URL>
+   cd arthik
+   ```
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+2. Install dependencies:
+   ```sh
+   npm install
+   # or
+   bun install
+   ```
 
-## How can I deploy this project?
+3. Start the development server:
+   ```sh
+   npm run dev
+   # or
+   bun dev
+   ```
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+---
 
-## Can I connect a custom domain to my Lovable project?
+## 📜 Available Scripts
 
-Yes, you can!
+- `npm run dev` - Start development server.
+- `npm run build` - Build the project for production.
+- `npm run lint` - Run ESLint to find and fix issues.
+- `npm run test` - Run unit tests with Vitest.
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+---
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+## 🌟 Mission
+
+Our mission is to make financial education inclusive, accessible, and fun. Every citizen deserves the tools to manage their wealth and understand the economy. **Start your journey with Arthik today.**
