@@ -183,6 +183,8 @@ export const currentUser = {
   modulesCompleted: 5,
   tournamentsWon: 2,
   rank: 14,
+  balance: 50000,
+  isPro: false,
 };
 
 // Topic categories for learn page
