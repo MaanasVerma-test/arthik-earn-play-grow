@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Crown, Medal } from "lucide-react";
 import { motion } from "framer-motion";
 
-const tabs = ["Weekly", "Monthly", "All-time"];
+const tabs = ["Weekly", "Monthly", "All-time", "Season 1"];
 
 const LeaderboardPage = () => {
   const [activeTab, setActiveTab] = useState("Weekly");

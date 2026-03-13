@@ -25,17 +25,21 @@ const CompetePage = () => {
   }, []);
 
   const handleFindMatch = async () => {
-    if (!userId) {
-      toast.error("Please login to compete!");
-      return;
+    let currentId = userId;
+    let currentName = username;
+
+    if (!currentId) {
+      currentId = `guest_${Math.random().toString(36).substr(2, 9)}`;
+      currentName = `Guest_${Math.random().toString(36).substr(2, 4)}`;
     }
+
     setIsSearching(true);
     
-    await multiplayerService.findMatch(userId, username, (match) => {
+    await multiplayerService.findMatch(currentId, currentName, (match) => {
         setIsSearching(false);
         toast.success("Match Found! Entering Arena...");
         setTimeout(() => {
-            navigate(`/compete/arena/${match.id}`);
+            navigate(`/compete/arena/${match.id}?guest=true&name=${currentName}&id=${currentId}`);
         }, 1500);
     });
   };

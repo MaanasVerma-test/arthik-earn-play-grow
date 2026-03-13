@@ -9,6 +9,7 @@ import { simulatePortfolio, ratePortfolio, PortfolioAllocation, SimulationYear }
 import { toast } from "sonner";
 import { TrendingUp, PieChart, ShieldCheck, AlertTriangle } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { secureService } from "@/lib/secureService";
 
 const INITIAL_INVESTMENT = 1000000; // ₹10,00,000
 
@@ -68,16 +69,14 @@ const PortfolioBuilderPage = () => {
       });
       setIsSimulating(false);
       
-      // Award XP
-      try {
-          const { data: session } = await supabase.auth.getSession();
-          if (session.session?.user && rating.score >= 5) {
-              const { data: profile } = await supabase.from('profiles').select('xp').eq('id', session.session.user.id).single();
-              await supabase.from('profiles').update({ xp: (profile?.xp || 0) + 100 }).eq('id', session.session.user.id);
+      // Award XP Securely
+      if (rating.score >= 5) {
+          const result = await secureService.awardXP(100, 'PORTFOLIO_SIM', `Scored ${rating.score}/10 in Portfolio simulation`);
+          if (result?.success) {
               toast.success("Simulation Complete! +100 XP awarded.");
+          } else {
+              toast.info("Simulation complete! Login to save your 100 XP.");
           }
-      } catch (e) {
-          console.error("XP not awarded", e);
       }
     }, 1500);
   };

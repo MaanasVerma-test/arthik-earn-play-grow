@@ -1,21 +1,24 @@
 import { useState, useEffect } from "react";
 import AppLayout from "@/components/layout/AppLayout";
 import { currentUser as mockUser, getUserLevel, learningModules, leaderboardUsers } from "@/data/mockData";
-import { Flame, Trophy, Award, TrendingUp, BookOpen, Gamepad2 } from "lucide-react";
+import { Flame, Trophy, Award, TrendingUp, BookOpen, Gamepad2, History, Zap } from "lucide-react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
+import { secureService, ActivityLog } from "@/lib/secureService";
 
 const DashboardPage = () => {
   const [user, setUser] = useState(mockUser);
   const [loading, setLoading] = useState(true);
+  const [activities, setActivities] = useState<ActivityLog[]>([]);
 
   useEffect(() => {
-    const fetchProfile = async () => {
+    const fetchProfileData = async () => {
       const { data: { user: authUser } } = await supabase.auth.getUser();
       
       if (authUser) {
+        // Fetch Profile
         const { data: profile } = await supabase
           .from('profiles')
           .select('*')
@@ -24,17 +27,21 @@ const DashboardPage = () => {
 
         if (profile) {
           setUser({
-            ...mockUser, // Keep city, rank etc from mock for now
+            ...mockUser,
             name: profile.full_name || authUser.email?.split('@')[0] || "Trader",
             xp: profile.xp || 0,
             streak: profile.streak_days || 0,
           });
         }
+
+        // Fetch Recent Activity
+        const recentLogs = await secureService.getRecentActivity();
+        setActivities(recentLogs);
       }
       setLoading(false);
     };
 
-    fetchProfile();
+    fetchProfileData();
   }, []);
 
   const level = getUserLevel(user.xp);
@@ -76,7 +83,7 @@ const DashboardPage = () => {
           </div>
         </motion.div>
 
-        {/* Quick stats */}
+        {/* Quick stats grid */}
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
           {[
             { label: "Total XP", value: user.xp.toLocaleString(), icon: TrendingUp },
@@ -99,81 +106,97 @@ const DashboardPage = () => {
         </div>
 
         <div className="grid gap-6 lg:grid-cols-2">
-          {/* Continue Learning */}
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
+           {/* Recent Activity */}
+           <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.2 }}
             className="rounded-xl border border-border bg-card p-5"
           >
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <BookOpen size={16} />
-              <span className="text-sm font-medium">Continue Learning</span>
-            </div>
-            <h3 className="mt-3 font-display text-lg">{lastModule.title}</h3>
-            <p className="mt-1 text-sm text-muted-foreground">{lastModule.description}</p>
-            <div className="mt-4 h-2 overflow-hidden rounded-full bg-secondary">
-              <div className="h-full w-1/4 rounded-full bg-primary" />
-            </div>
-            <div className="mt-2 flex items-center justify-between">
-              <span className="text-xs text-muted-foreground">25% complete</span>
-              <Button size="sm" variant="outline" asChild>
-                <Link to="/learn">Resume</Link>
-              </Button>
-            </div>
-          </motion.div>
-
-          {/* Today's Challenge */}
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.35 }}
-            className="gold-border-top rounded-xl border border-border bg-card p-5"
-          >
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <Gamepad2 size={16} />
-              <span className="text-sm font-medium">Today's Challenge</span>
-            </div>
-            <h3 className="mt-3 font-display text-lg">Financial Trivia</h3>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Answer 10 questions about investing basics and earn up to 100 XP.
-            </p>
-            <div className="mt-4 flex items-center justify-between">
-              <span className="font-mono text-sm text-primary">+100 XP</span>
-              <Button size="sm" asChild>
-                <Link to="/games/trivia">Play Now</Link>
-              </Button>
-            </div>
-          </motion.div>
-        </div>
-
-        {/* Mini Leaderboard */}
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="rounded-xl border border-border bg-card p-5"
-        >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <Trophy size={16} />
-              <span className="text-sm font-medium">Leaderboard</span>
-            </div>
-            <Link to="/leaderboard" className="text-xs text-primary hover:underline">View all</Link>
-          </div>
-          <div className="mt-4 space-y-2">
-            {leaderboardUsers.slice(0, 5).map((u) => (
-              <div key={u.rank} className="flex items-center justify-between rounded-lg px-3 py-2 hover:bg-secondary/50">
-                <div className="flex items-center gap-3">
-                  <span className="w-6 font-mono text-sm text-muted-foreground">{u.rank}</span>
-                  <div className="flex h-7 w-7 items-center justify-center rounded-full bg-secondary text-xs">{u.avatar}</div>
-                  <span className="text-sm">{u.name}</span>
-                </div>
-                <span className="font-mono text-sm text-muted-foreground">{u.xp.toLocaleString()} XP</span>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <History size={16} />
+                <span className="text-sm font-medium">Recent Activity</span>
               </div>
-            ))}
+            </div>
+            <div className="space-y-4">
+              {activities.length > 0 ? (
+                activities.map((activity, i) => (
+                  <div key={activity.id} className="flex items-center justify-between border-b border-border/50 pb-3 last:border-0 last:pb-0">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary">
+                        <Zap size={14} />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium">{activity.details}</p>
+                        <p className="text-xs text-muted-foreground">{new Date(activity.created_at).toLocaleDateString()}</p>
+                      </div>
+                    </div>
+                    <span className="font-mono text-sm font-bold text-success">+{activity.xp_earned} XP</span>
+                  </div>
+                ))
+              ) : (
+                <div className="py-8 text-center text-sm text-muted-foreground">
+                  <p>No recent activity found.</p>
+                  <p className="text-xs mt-1">Play games to earn XP and track history!</p>
+                </div>
+              )}
+            </div>
+          </motion.div>
+
+          <div className="space-y-6">
+            {/* Today's Challenge */}
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="gold-border-top rounded-xl border border-border bg-card p-5"
+            >
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Gamepad2 size={16} />
+                <span className="text-sm font-medium">Today's Challenge</span>
+              </div>
+              <h3 className="mt-3 font-display text-lg">Portfolio Builder</h3>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Master the art of 10-year asset allocation and earn points.
+              </p>
+              <div className="mt-4 flex items-center justify-between">
+                <span className="font-mono text-sm text-primary">+100 XP</span>
+                <Button size="sm" asChild>
+                  <Link to="/games/portfolio-builder">Play Now</Link>
+                </Button>
+              </div>
+            </motion.div>
+
+            {/* Mini Leaderboard */}
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+              className="rounded-xl border border-border bg-card p-5"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Trophy size={16} />
+                  <span className="text-sm font-medium">Global Rankings</span>
+                </div>
+                <Link to="/leaderboard" className="text-xs text-primary hover:underline">View all</Link>
+              </div>
+              <div className="mt-4 space-y-2">
+                {leaderboardUsers.slice(0, 3).map((u) => (
+                  <div key={u.rank} className="flex items-center justify-between rounded-lg px-3 py-2 hover:bg-secondary/50">
+                    <div className="flex items-center gap-3">
+                      <span className="w-6 font-mono text-sm text-muted-foreground">{u.rank}</span>
+                      <div className="flex h-7 w-7 items-center justify-center rounded-full bg-secondary text-xs">{u.avatar}</div>
+                      <span className="text-sm">{u.name}</span>
+                    </div>
+                    <span className="font-mono text-sm text-muted-foreground">{u.xp.toLocaleString()} XP</span>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
           </div>
-        </motion.div>
+        </div>
       </div>
     </AppLayout>
   );

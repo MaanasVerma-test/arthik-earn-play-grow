@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Heart, Wallet, CalendarDays, RefreshCw, Trophy, Zap } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/lib/supabase";
+import { secureService } from "@/lib/secureService";
 import {
   BudgetEvent,
   Choice,
@@ -141,33 +142,16 @@ const BudgetChallengePage = () => {
   const awardXP = async (finalSavings: number) => {
      if (!userId) return;
      setIsSavingXP(true);
-     try {
-        // Bonus XP for high savings
-        const boundsXP = finalSavings > INITIAL_SAVINGS * 2 ? 50 : 0;
-        const totalXP = WINNING_XP + boundsXP;
+     
+     // Bonus XP for high savings
+     const boundsXP = finalSavings > INITIAL_SAVINGS * 2 ? 50 : 0;
+     const totalXP = WINNING_XP + boundsXP;
 
-        // Fetch current profile
-        const { data: profile } = await supabase.from('profiles').select('xp').eq('id', userId).single();
-        const newXp = (profile?.xp ?? 0) + totalXP;
-
-        // Update profile
-        await supabase.from('profiles').update({ xp: newXp }).eq('id', userId);
-        
-        // Save history
-        await supabase.from('game_history').insert({
-             user_id: userId,
-             game_id: 'budget_challenge',
-             score: finalSavings,
-             xp_earned: totalXP,
-             details: { finalHappiness: happiness, finalSavings }
-        });
-
-        toast.success(`You survived the year! Awarded ${totalXP} XP.`);
-     } catch (err) {
-         console.error("Failed to save budget challenge XP", err);
-     } finally {
-         setIsSavingXP(false);
+     const result = await secureService.awardXP(totalXP, 'BUDGET_CHALLENGE', `Survived 12 months with ₹${finalSavings.toLocaleString()} savings`);
+     if (result?.success) {
+         toast.success(`You survived the year! Awarded ${totalXP} XP.`);
      }
+     setIsSavingXP(false);
   };
 
 

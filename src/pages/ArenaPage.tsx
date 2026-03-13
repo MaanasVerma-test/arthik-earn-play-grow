@@ -4,10 +4,11 @@ import AppLayout from "@/components/layout/AppLayout";
 import { motion, AnimatePresence } from "framer-motion";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import { Trophy, Clock, Swords, CheckCircle2, XCircle } from "lucide-react";
+import { Trophy, Clock, Zap, ArrowRight, Shield, Swords, Info, RefreshCw as RefreshIcon, CheckCircle2, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { multiplayerService, Match, Player } from "@/lib/multiplayerService";
+import { secureService } from "@/lib/secureService";
 
 const CHALLENGE_ITEMS = [
   { id: '1', text: 'Health Insurance', category: 'Need' },
@@ -37,21 +38,24 @@ const ArenaPage = () => {
   const [winner, setWinner] = useState<string | null>(null);
 
   useEffect(() => {
-    // 1. Get user session
+    // 1. Get user session or Guest info
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) {
-        toast.error("Please login to compete");
-        navigate("/login");
-        return;
-      }
-      setCurrentUser(session.user);
+      let player1: Player;
       
-      // Initialize Match State
-      // In a real app, we'd fetch the match details from Supabase here.
-      // For the prototype, we simulate player 1 vs Bot.
+      if (session) {
+        setCurrentUser(session.user);
+        player1 = { id: session.user.id, username: session.user.email?.split('@')[0] || 'You', progress: 0 };
+      } else {
+        const params = new URLSearchParams(window.location.search);
+        const guestId = params.get('id') || `guest_${Math.random().toString(36).substr(2, 9)}`;
+        const guestName = params.get('name') || 'Guest';
+        player1 = { id: guestId, username: guestName, progress: 0 };
+        setCurrentUser({ id: guestId, isGuest: true });
+      }
+      
       setMatch({
           id: matchId || 'sim_match',
-          player1: { id: session.user.id, username: session.user.email?.split('@')[0] || 'You', progress: 0 },
+          player1,
           player2: { id: 'bot', username: 'ShadowPlayer_Bot', progress: 0 },
           status: 'counting_down',
           startTime: Date.now() + 5000
@@ -123,13 +127,14 @@ const ArenaPage = () => {
   };
 
   const awardXP = async () => {
-      try {
-          const { data: profile } = await supabase.from('profiles').select('xp').eq('id', currentUser.id).single();
-          const newXp = (profile?.xp || 0) + 150;
-          await supabase.from('profiles').update({ xp: newXp }).eq('id', currentUser.id);
+      if (!currentUser || currentUser.isGuest) {
+          toast.info("Victory! Log in to save XP and climb the leaderboard.");
+          return;
+      }
+      
+      const result = await secureService.awardXP(150, 'MATCH_VICTORY', 'Won a 1v1 Arena match');
+      if (result?.success) {
           toast.success("Victory! Awarded 150 XP");
-      } catch (e) {
-          console.error("XP sync failed", e);
       }
   };
 
