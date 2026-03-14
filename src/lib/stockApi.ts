@@ -19,6 +19,11 @@ export interface StockQuote {
 export interface ChartDataPoint {
   day: string;
   price: number;
+  open?: number;
+  high?: number;
+  low?: number;
+  close?: number;
+  timestamp?: number;
 }
 
 // ------------------------------------------------------------------
@@ -71,9 +76,23 @@ export const getMockHistoricalData = (symbol: string, range: TimeRange = '1M'): 
 
   for(let i = days; i >= 0; i--) {
       const volatility = range === '1D' ? 0.001 : 0.01;
-      currentPrice = currentPrice * (1 + ((Math.random() - 0.45) * 2 * volatility));
+      const open = currentPrice;
+      const close = currentPrice * (1 + ((Math.random() - 0.45) * 2 * volatility));
+      const high = Math.max(open, close) * (1 + Math.random() * volatility);
+      const low = Math.min(open, close) * (1 - Math.random() * volatility);
+      
       const label = range === '1D' ? `${10+Math.abs(days-i)}:00` : `D-${i}`;
-      points.push({ day: label, price: Number(currentPrice.toFixed(2)) });
+      
+      points.push({ 
+          day: label, 
+          price: Number(close.toFixed(2)),
+          open: Number(open.toFixed(2)),
+          high: Number(high.toFixed(2)),
+          low: Number(low.toFixed(2)),
+           close: Number(close.toFixed(2)),
+           timestamp: new Date().getTime() - (i * 24 * 60 * 60 * 1000)
+      });
+      currentPrice = close;
   }
 
   const quote = getMockQuote(symbol);
@@ -168,6 +187,9 @@ export const fetchHistoricalData = async (symbol: string, range: TimeRange = '1M
 
         const timestamps: number[] = result.timestamp;
         const closes: number[] = result.indicators.quote[0].close;
+        const opens: number[] = result.indicators.quote[0].open;
+        const highs: number[] = result.indicators.quote[0].high;
+        const lows: number[] = result.indicators.quote[0].low;
 
         let formattedData: ChartDataPoint[] = [];
 
@@ -188,7 +210,12 @@ export const fetchHistoricalData = async (symbol: string, range: TimeRange = '1M
 
                 formattedData.push({
                     day: dayLabel,
-                    price: Number(closes[i].toFixed(2))
+                    price: Number(closes[i].toFixed(2)),
+                    open: opens?.[i] ? Number(opens[i].toFixed(2)) : undefined,
+                    high: highs?.[i] ? Number(highs[i].toFixed(2)) : undefined,
+                    low: lows?.[i] ? Number(lows[i].toFixed(2)) : undefined,
+                    close: closes?.[i] ? Number(closes[i].toFixed(2)) : undefined,
+                    timestamp: timestamps[i] * 1000
                 });
             }
         }
@@ -207,7 +234,12 @@ export const fetchHistoricalData = async (symbol: string, range: TimeRange = '1M
                     const date = new Date(timestamps[i] * 1000);
                      formattedData.push({
                         day: date.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }),
-                        price: Number(closes[i].toFixed(2))
+                        price: Number(closes[i].toFixed(2)),
+                        open: opens?.[i] ? Number(opens[i].toFixed(2)) : undefined,
+                        high: highs?.[i] ? Number(highs[i].toFixed(2)) : undefined,
+                        low: lows?.[i] ? Number(lows[i].toFixed(2)) : undefined,
+                        close: closes?.[i] ? Number(closes[i].toFixed(2)) : undefined,
+                        timestamp: timestamps[i] * 1000
                     });
                 }
             }

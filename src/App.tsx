@@ -19,6 +19,7 @@ import BidBonanzaPage from "./pages/BidBonanzaPage";
 import BudgetChallengePage from "./pages/BudgetChallengePage";
 import ArenaPage from "./pages/ArenaPage";
 import PortfolioBuilderPage from "./pages/PortfolioBuilderPage";
+import AiBudgetingPage from "./pages/AiBudgetingPage";
 
 const queryClient = new QueryClient();
 
@@ -44,6 +45,7 @@ const App = () => (
           <Route path="/games/budget-challenge" element={<BudgetChallengePage />} />
           <Route path="/games/bid-bonanza" element={<BidBonanzaPage />} />
           <Route path="/games/portfolio-builder" element={<PortfolioBuilderPage />} />
+          <Route path="/budgeting" element={<AiBudgetingPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

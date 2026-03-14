@@ -9,6 +9,8 @@ const Navbar = () => {
 
   const links = [
     { label: "Learn", href: "/learn" },
+    { label: "Simulation", href: "/games/stock-simulator" },
+    { label: "Budgeting", href: "/budgeting" },
     { label: "Games", href: "/games" },
     { label: "Compete", href: "/compete" },
     { label: "Leaderboard", href: "/leaderboard" },

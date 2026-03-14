@@ -1,12 +1,14 @@
 import { ReactNode, useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { LayoutDashboard, BookOpen, Gamepad2, Swords, Trophy, User, Flame, Menu, X } from "lucide-react";
+import { LayoutDashboard, BookOpen, Gamepad2, Swords, Trophy, User, Flame, Menu, X, LineChart, Wallet } from "lucide-react";
 import { currentUser, getUserLevel } from "@/data/mockData";
 import { supabase } from "@/lib/supabase";
 
 const navItems = [
   { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
   { label: "Learn", icon: BookOpen, href: "/learn" },
+  { label: "Simulation", icon: LineChart, href: "/games/stock-simulator" },
+  { label: "Budgeting", icon: Wallet, href: "/budgeting" },
   { label: "Games", icon: Gamepad2, href: "/games" },
   { label: "Compete", icon: Swords, href: "/compete" },
   { label: "Leaderboard", icon: Trophy, href: "/leaderboard" },

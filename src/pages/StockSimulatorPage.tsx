@@ -4,8 +4,9 @@ import { mockStocks } from "@/data/mockData";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Search, TrendingUp, TrendingDown, Activity, RefreshCw } from "lucide-react";
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
+import { Search, TrendingUp, TrendingDown, Activity, RefreshCw, BarChart } from "lucide-react";
+import Chart from "react-apexcharts";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { fetchLiveQuote, fetchHistoricalData, StockQuote, ChartDataPoint, TimeRange } from "@/lib/stockApi";
 
 interface Holding {
@@ -21,6 +22,7 @@ const StockSimulatorPage = () => {
   const [holdings, setHoldings] = useState<Holding[]>([]);
   const [search, setSearch] = useState("");
   const [qty, setQty] = useState(1);
+  const [chartType, setChartType] = useState<'line' | 'candlestick'>('line');
   
   // Real-time Data State
   const [selectedSymbol, setSelectedSymbol] = useState(mockStocks[0].symbol);
@@ -111,6 +113,65 @@ const StockSimulatorPage = () => {
   const totalValue = cash + portfolioValue;
   const pnl = totalValue - 100000;
   const pnlPct = ((pnl / 100000) * 100).toFixed(2);
+
+  const apexSeries = chartType === 'candlestick' ? [{
+      data: chartData.map(d => ({
+          x: d.timestamp || new Date(d.day).getTime() || d.day,
+          y: [d.open || d.price, d.high || d.price, d.low || d.price, d.close || d.price]
+      }))
+  }] : [{
+      name: "Price",
+      data: chartData.map(d => ({
+          x: d.timestamp || new Date(d.day).getTime() || d.day,
+          y: parseFloat(d.price.toFixed(2))
+      }))
+  }];
+
+  const apexOptions: any = {
+      chart: {
+          type: chartType,
+          toolbar: { show: false },
+          animations: { enabled: false },
+          background: 'transparent',
+      },
+      grid: { show: false },
+      xaxis: {
+          type: 'datetime',
+          labels: {
+              style: { colors: 'hsl(216 18% 62%)', fontSize: '10px' },
+              datetimeUTC: false,
+              format: timeRange === '1D' || timeRange === '5D' ? 'HH:mm' : 'dd MMM',
+          },
+          axisBorder: { show: false },
+          axisTicks: { show: false },
+          tooltip: { enabled: false }
+      },
+      yaxis: {
+          labels: {
+              style: { colors: 'hsl(216 18% 62%)', fontSize: '10px' },
+              formatter: (value: number) => `₹${value.toFixed(2)}`,
+          },
+      },
+      theme: { mode: 'dark' },
+      tooltip: {
+          theme: 'dark',
+          y: { formatter: (val: number) => `₹${val.toFixed(2)}` },
+          x: { format: 'dd MMM, HH:mm' }
+      },
+      stroke: {
+          curve: 'monotoneCubic',
+          width: chartType === 'line' ? 2 : 1,
+      },
+      colors: ['hsl(42 52% 54%)'],
+      plotOptions: {
+          candlestick: {
+              colors: {
+                  upward: 'hsl(142 71% 45%)',
+                  downward: 'hsl(0 84% 60%)'
+              }
+          }
+      }
+  };
 
   return (
     <AppLayout>
@@ -229,16 +290,34 @@ const StockSimulatorPage = () => {
                 </div>
               </div>
               
-              <div className="mt-4 flex gap-2">
-                  {TIME_RANGES.map((range) => (
-                      <button
-                          key={range}
-                          onClick={() => setTimeRange(range)}
-                          className={`px-3 py-1 text-xs font-semibold rounded-md transition-colors ${timeRange === range ? 'bg-primary text-primary-foreground' : 'bg-secondary text-muted-foreground hover:bg-secondary/80'}`}
-                      >
-                          {range}
-                      </button>
-                  ))}
+              <div className="mt-4 flex items-center justify-between">
+                  <div className="flex gap-2">
+                      {TIME_RANGES.map((range) => (
+                          <button
+                              key={range}
+                              onClick={() => setTimeRange(range)}
+                              className={`px-3 py-1 text-xs font-semibold rounded-md transition-colors ${timeRange === range ? 'bg-primary text-primary-foreground' : 'bg-secondary text-muted-foreground hover:bg-secondary/80'}`}
+                          >
+                              {range}
+                          </button>
+                      ))}
+                  </div>
+                  
+                  <div className="md:w-40 w-[120px]">
+                      <Select value={chartType} onValueChange={(val: 'line' | 'candlestick') => setChartType(val)}>
+                          <SelectTrigger className="h-8 text-xs">
+                              <SelectValue placeholder="Chart Type" />
+                          </SelectTrigger>
+                          <SelectContent>
+                              <SelectItem value="line">
+                                  <div className="flex items-center gap-2"><Activity size={14}/> Line</div>
+                              </SelectItem>
+                              <SelectItem value="candlestick">
+                                  <div className="flex items-center gap-2"><BarChart size={14}/> Candlestick</div>
+                              </SelectItem>
+                          </SelectContent>
+                      </Select>
+                  </div>
               </div>
 
               <div className="mt-6 h-[250px] relative">
@@ -247,19 +326,11 @@ const StockSimulatorPage = () => {
                         <RefreshCw size={24} className="animate-spin text-primary" />
                     </div>
                 ) : null}
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={chartData}>
-                    <XAxis dataKey="day" tick={{ fontSize: 10, fill: "hsl(216 18% 62%)" }} stroke="hsl(216 18% 62%)" axisLine={false} tickLine={false} minTickGap={20} />
-                    <YAxis tick={{ fontSize: 10, fill: "hsl(216 18% 62%)" }} stroke="hsl(216 18% 62%)" domain={['auto', 'auto']} axisLine={false} tickLine={false} width={40} />
-                    <Tooltip
-                      contentStyle={{ background: "hsl(220 40% 10%)", border: "1px solid hsl(218 20% 18%)", borderRadius: 8, fontSize: 12 }}
-                      labelStyle={{ color: "hsl(216 18% 62%)", marginBottom: 4 }}
-                      itemStyle={{ color: "hsl(42 52% 54%)", fontWeight: "bold" }}
-                      formatter={(val: number) => [`₹${val.toFixed(2)}`, "Close"]}
-                    />
-                    <Line type="monotone" dataKey="price" stroke="hsl(42 52% 54%)" strokeWidth={2.5} dot={false} activeDot={{ r: 6, fill: "hsl(42 52% 54%)", stroke: "hsl(220 40% 10%)", strokeWidth: 2 }} animationDuration={500} />
-                  </LineChart>
-                </ResponsiveContainer>
+                <div className="h-full w-full">
+                    {chartData.length > 0 && (
+                        <Chart options={apexOptions} series={apexSeries} type={chartType} height="100%" width="100%" />
+                    )}
+                </div>
               </div>
             </div>
 
