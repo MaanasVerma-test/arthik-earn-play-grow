@@ -58,11 +58,11 @@
 | **Styling** | Tailwind CSS + shadcn/ui |
 | **Animations** | Framer Motion |
 | **Charts** | ApexCharts (Candlestick, Line, Donut, Area) + Recharts |
-| **AI** | Google Gemini API (`@google/generative-ai`) |
+| **AI** | Google Gemini API (`@google/generative-ai`)|
 | **Backend** | Supabase (Auth, Database, Profiles) |
 | **State** | TanStack React Query |
 | **Icons** | Lucide React |
-| **HTTP** | Axios (Yahoo Finance proxy) |
+| **HTTP** | Axios (Yahoo Finance proxy)+Alpha Vantage |
 | **Deployment** | Vercel |
 
 ---
